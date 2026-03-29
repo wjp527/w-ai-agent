@@ -10,10 +10,8 @@ import java.util.Map;
 
 public class ReReadingAdvisor implements BaseAdvisor {
 
-	private static final String DEFAULT_RE2_ADVISE_TEMPLATE = """
-			{re2_input_query}
-			Read the question again: {re2_input_query}
-			""";
+	private static final String DEFAULT_RE2_ADVISE_TEMPLATE =
+			"{re2_input_query}\nRead the question again: {re2_input_query}\n";
 
 	private final String re2AdviseTemplate;
 

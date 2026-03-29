@@ -2,17 +2,23 @@ package com.wjp.waiagent.app;
 
 import com.wjp.waiagent.advisor.MySimpleLoggerAdvisor;
 import com.wjp.waiagent.advisor.ReReadingAdvisor;
+import com.wjp.waiagent.rag.LoveAppVectorStoreConfig;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.client.advisor.api.Advisor;
+import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Vector;
 
 @Component
 @Slf4j
@@ -99,5 +105,51 @@ public class LoveApp {
         log.info("loveReport: {}", loveReport);
         return loveReport;
     }
+
+    /**
+     * 本地向量库 RAG
+     */
+    @Resource
+    private VectorStore loveAppVectorStore;
+
+    /**
+     * 云端知识库 RAG：见 {@link com.wjp.waiagent.rag.LoveAppRagCloudAdvisorConfig#questionAnswerAdvisor()}
+     */
+    @Resource(name = "questionAnswerAdvisor")
+    private Advisor cloudQuestionAnswerAdvisor;
+
+    public String doChatWithRag(String message, String chatId) {
+        ChatResponse chatResponse = chatClient.prompt()
+                .user(message)
+                .advisors(spec -> spec
+                        // 当前版本不再提供 CHAT_MEMORY_* 常量；conversation id 的 key 固定为 ChatMemory.CONVERSATION_ID
+                        .param(ChatMemory.CONVERSATION_ID, chatId)
+                )
+                // 本地向量库：
+//                 .advisors(new QuestionAnswerAdvisor(loveAppVectorStore))
+                // 云端知识库 阿里
+                .advisors(cloudQuestionAnswerAdvisor)
+                .call()
+                .chatResponse();
+
+        String content = chatResponse.getResult().getOutput().getText();
+        log.info("content: {}", content);
+        return content;
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 }
