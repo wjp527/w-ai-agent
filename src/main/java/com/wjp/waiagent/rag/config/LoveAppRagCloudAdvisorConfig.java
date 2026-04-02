@@ -1,4 +1,4 @@
-package com.wjp.waiagent.rag;
+package com.wjp.waiagent.rag.config;
 
 import com.alibaba.cloud.ai.dashscope.api.DashScopeApi;
 import com.alibaba.cloud.ai.dashscope.rag.DashScopeDocumentRetriever;

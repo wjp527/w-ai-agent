@@ -48,8 +48,9 @@ class LoveAppTest {
     @Test
     void doChatWithRag() {
         String chatId = UUID.randomUUID().toString();
-        String message = "我已经结婚了，但是婚后关系不太亲密，怎么办？";
+//        String message = "我已经结婚了，但是婚后关系不太亲密，怎么办？";
 //        String message = "我是一个性格内向，但是想找一个活泼可爱的女朋友，我可以找哪种对象呢？";
+        String message = "我已经结婚了，但是婚后关系不太亲密，怎么办？";
         String answer =  loveApp.doChatWithRag(message, chatId);
         Assertions.assertNotNull(answer);
     }

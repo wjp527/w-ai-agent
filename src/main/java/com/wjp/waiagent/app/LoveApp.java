@@ -1,10 +1,13 @@
 package com.wjp.waiagent.app;
 
 import com.wjp.waiagent.advisor.MySimpleLoggerAdvisor;
-import com.wjp.waiagent.advisor.ReReadingAdvisor;
-import com.wjp.waiagent.rag.LoveAppVectorStoreConfig;
+import com.wjp.waiagent.demo.rag.QueryRewriter;
+import com.wjp.waiagent.rag.LoveAppRagCustomAdvisorFactory;
+import com.wjp.waiagent.rag.config.LoveAppRagCloudAdvisorConfig;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
@@ -18,7 +21,6 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Vector;
 
 @Component
 @Slf4j
@@ -109,18 +111,30 @@ public class LoveApp {
     /**
      * 本地向量库 RAG
      */
-    @Resource
+    @Resource(name = "LoveAppVectorStore")
     private VectorStore loveAppVectorStore;
 
     /**
-     * 云端知识库 RAG：见 {@link com.wjp.waiagent.rag.LoveAppRagCloudAdvisorConfig#questionAnswerAdvisor()}
+     * 云端知识库 RAG：见 {@link LoveAppRagCloudAdvisorConfig#questionAnswerAdvisor()}
      */
     @Resource(name = "questionAnswerAdvisor")
     private Advisor cloudQuestionAnswerAdvisor;
 
+    @Autowired(required = false)
+    @Qualifier("pgVectorVectorStore")
+    private VectorStore pgVectorVectorStore;
+
+    /**
+     * 查询重写器
+     */
+    @Resource
+    private QueryRewriter queryRewriter;
+
     public String doChatWithRag(String message, String chatId) {
+        // 获取重写后的消息
+        String rewriteMessage = queryRewriter.doQueryRewrite(message);
         ChatResponse chatResponse = chatClient.prompt()
-                .user(message)
+                .user(rewriteMessage)
                 .advisors(spec -> spec
                         // 当前版本不再提供 CHAT_MEMORY_* 常量；conversation id 的 key 固定为 ChatMemory.CONVERSATION_ID
                         .param(ChatMemory.CONVERSATION_ID, chatId)
@@ -128,7 +142,13 @@ public class LoveApp {
                 // 本地向量库：
 //                 .advisors(new QuestionAnswerAdvisor(loveAppVectorStore))
                 // 云端知识库 阿里
-                .advisors(cloudQuestionAnswerAdvisor)
+//                .advisors(cloudQuestionAnswerAdvisor)
+                // 云端向量库：pgVector
+//                .advisors(new QuestionAnswerAdvisor(pgVectorVectorStore))
+                // 开启检索增强顾问模式
+                .advisors(
+                        LoveAppRagCustomAdvisorFactory.createLoveAppRagCustomAdvisor(loveAppVectorStore, "单身")
+                )
                 .call()
                 .chatResponse();
 
