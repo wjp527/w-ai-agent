@@ -4,8 +4,10 @@ import com.wjp.waiagent.advisor.MySimpleLoggerAdvisor;
 import com.wjp.waiagent.demo.rag.QueryRewriter;
 import com.wjp.waiagent.rag.LoveAppRagCustomAdvisorFactory;
 import com.wjp.waiagent.rag.config.LoveAppRagCloudAdvisorConfig;
+import com.wjp.waiagent.tools.ToolRegistration;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.tool.ToolCallback;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.ai.chat.client.ChatClient;
@@ -130,6 +132,7 @@ public class LoveApp {
     @Resource
     private QueryRewriter queryRewriter;
 
+
     public String doChatWithRag(String message, String chatId) {
         // 获取重写后的消息
         String rewriteMessage = queryRewriter.doQueryRewrite(message);
@@ -158,18 +161,28 @@ public class LoveApp {
 
     }
 
+    /**
+     * 工具注册
+     */
+    @Resource
+    private ToolCallback[] allTools;
 
+    public String doChatWithTools(String message, String chatId) {
+        ChatResponse chatResponse = chatClient.prompt()
+                .user(message)
+                .advisors(spec -> spec
+                        // 当前版本不再提供 CHAT_MEMORY_* 常量；conversation id 的 key 固定为 ChatMemory.CONVERSATION_ID
+                        .param(ChatMemory.CONVERSATION_ID, chatId)
+                )
+                .toolCallbacks(allTools)
+                .call()
+                .chatResponse();
 
+        String content = chatResponse.getResult().getOutput().getText();
+        log.info("content: {}", content);
+        return content;
 
-
-
-
-
-
-
-
-
-
+    }
 
 
 }
