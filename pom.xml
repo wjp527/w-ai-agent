@@ -64,6 +64,13 @@
             <artifactId>spring-ai-alibaba-starter-dashscope</artifactId>
         </dependency>
 
+        <!-- Spring AI MCP -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-mcp-client</artifactId>
+        </dependency>
+
+
         <!-- Markdown 解析器 -->
         <!-- Source: https://mvnrepository.com/artifact/org.springframework.ai/spring-ai-markdown-document-reader -->
         <dependency>

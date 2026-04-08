@@ -8,6 +8,7 @@ import com.wjp.waiagent.tools.ToolRegistration;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.tool.ToolCallback;
+import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.ai.chat.client.ChatClient;
@@ -175,6 +176,32 @@ public class LoveApp {
                         .param(ChatMemory.CONVERSATION_ID, chatId)
                 )
                 .toolCallbacks(allTools)
+                .call()
+                .chatResponse();
+
+        String content = chatResponse.getResult().getOutput().getText();
+        log.info("content: {}", content);
+        return content;
+
+    }
+
+    /**
+     * MCP
+     */
+    @Resource
+    private ToolCallbackProvider toolCallbackProvider;
+    public String doChatWithMcp(String message, String chatId) {
+        if (toolCallbackProvider == null) {
+            throw new IllegalStateException("MCP is disabled or not configured");
+        }
+        ChatResponse chatResponse = chatClient.prompt()
+                .user(message)
+                .advisors(spec -> spec
+                        // 当前版本不再提供 CHAT_MEMORY_* 常量；conversation id 的 key 固定为 ChatMemory.CONVERSATION_ID
+                        .param(ChatMemory.CONVERSATION_ID, chatId)
+                )
+                // 使用 MCP
+                .toolCallbacks(toolCallbackProvider)
                 .call()
                 .chatResponse();
 

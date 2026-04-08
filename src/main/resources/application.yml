@@ -3,6 +3,19 @@ spring:
     name : w-ai-agent
   profiles:
     active: local
+  ai:
+    mcp:
+      client:
+        # sse 模式
+        sse:
+          connections:
+            server1:
+              url: http://localhost:8127
+              sse-endpoint: /sse
+        # stdio模式
+#        stdio:
+#          servers-configuration: classpath:mcp-servers.json
+
 server:
   port: 8123
   servlet:
